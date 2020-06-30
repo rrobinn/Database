@@ -6,7 +6,7 @@ import re
 import pandas as pd
 import argparse
 from datetime import datetime
-
+import shutil
 
 
 def select_headers(mydir):
@@ -49,17 +49,24 @@ def select_headers(mydir):
     header_check=df.isin(tobii_out_cols)
     if header_check.sum()[0] - header_check.shape[0] != 0:
         bad_headers=df[header_check[0]==False]
-        print("The following headers are invalid: " + bad_headers)
+        bad_headers=bad_headers[0].tolist()
+        print("The following headers are invalid and will be skipped: " + str(bad_headers))
+        df=df[header_check[0]]
     return df[0]
 
 
-def main(rootdir, filtered_data_name='Filtered_Data'):
+def main(rootdir, headers, filtered_data_name='Filtered_Data'):
     # Look at all files in rootdir.
     # Go through all .csv and .tsv files & try to filter them.
     # Save log of 'failed' files
 
-    headers = select_headers(rootdir)
-    headers = headers.tolist()
+    if headers is None: # If user did not add headers to command line, read headers from .csv
+        headers = select_headers(rootdir)
+        headers = headers.tolist()
+    else:
+        # Do something else
+        headers=headers.split(',')
+
     # Check if files exist to filter
     file_ext_list=[x.split('.')[-1] for x in os.listdir(rootdir) if '.' in x]
     accepted_file_ext=['tsv','csv']
@@ -70,7 +77,6 @@ def main(rootdir, filtered_data_name='Filtered_Data'):
     dir_filtered=os.path.join(rootdir, filtered_data_name)
     if not os.path.exists(dir_filtered):
         os.mkdir(dir_filtered)
-
     # start log of files with issues
     failed_files=open(os.path.join(dir_filtered, "error_log.txt"), 'a+')
     print("---------------- " + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + " ----------------",
@@ -78,16 +84,14 @@ def main(rootdir, filtered_data_name='Filtered_Data'):
 
     # iterate through files
     for f in os.listdir(rootdir):
+        if f=='headers.csv': continue
         file_ext=f.split('.')[-1]
-
-        if file_ext in accepted_file_ext:
-            # Read file
+        if file_ext in accepted_file_ext: # If it is a .tsv or .csv, read the file
             print("Reading file " + f)
             if file_ext == 'tsv':
-                df = pd.read_csv(f, header=0, delimiter='\t')
+                df = pd.read_csv(f, header=0, delimiter='\t',  low_memory=False)
             else:
-                df = pd.read_csv(f, header=0, delimiter='\t')
-
+                df = pd.read_csv(f, header=0, delimiter=',', low_memory=False)
             # Filter columns & save new output
             df_filtered = df.loc[:, df.columns.isin(headers)]
             # If original tobii file is missing expected column, log it
@@ -98,16 +102,21 @@ def main(rootdir, filtered_data_name='Filtered_Data'):
             # Write output
             file_name = os.path.relpath(f, rootdir)  # Extract file name by removing root_dir from full path
             df_filtered.to_csv(path_or_buf=os.path.join(dir_filtered, file_name), index=False)
-        else:
-            # If not a .csv or .tsv, log in failed_files
-            print(f, file=files_files)
+        else: # If not a .csv or .tsv, skip
+            print(f + " is not a .csv or .tsv. Skipping!")
+            continue
+
+
 
 
 
 if __name__ == '__main__':
     ap=argparse.ArgumentParser(
         description="Filter tobii files using headers")
-    ap.add_argument("-d", "--rootdir", required=True, type=str,
+    ap.add_argument("-d", "--rootdir", required=True, type=str, # Can use -d or --rootdir flag
                     help="path to parent directory for project containing eye tracking files")
+    #TODO add optional argument for col selection through the command line
+    ap.add_argument("--headers", required=False, type=str,
+                    help="Comma separated headers")
     args=ap.parse_args()
-    main(args.rootdir)
+    main(args.rootdir, args.headers)
