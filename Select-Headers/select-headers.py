@@ -115,8 +115,7 @@ if __name__ == '__main__':
         description="Filter tobii files using headers")
     ap.add_argument("-d", "--rootdir", required=True, type=str, # Can use -d or --rootdir flag
                     help="path to parent directory for project containing eye tracking files")
-    #TODO add optional argument for col selection through the command line
     ap.add_argument("--headers", required=False, type=str,
-                    help="Comma separated headers")
+                    help="Comma separated headers (e.g. <ExportDate,StudioVersion>)")
     args=ap.parse_args()
     main(args.rootdir, args.headers)
