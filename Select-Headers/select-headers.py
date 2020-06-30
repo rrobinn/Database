@@ -5,7 +5,7 @@ import os
 import re
 import pandas as pd
 import argparse
-
+from datetime import datetime
 
 
 
@@ -50,7 +50,7 @@ def select_headers(mydir):
     if header_check.sum()[0] - header_check.shape[0] != 0:
         bad_headers=df[header_check[0]==False]
         print("The following headers are invalid: " + bad_headers)
-    return df
+    return df[0]
 
 
 def main(rootdir, filtered_data_name='Filtered_Data'):
@@ -59,7 +59,7 @@ def main(rootdir, filtered_data_name='Filtered_Data'):
     # Save log of 'failed' files
 
     headers = select_headers(rootdir)
-
+    headers = headers.tolist()
     # Check if files exist to filter
     file_ext_list=[x.split('.')[-1] for x in os.listdir(rootdir) if '.' in x]
     accepted_file_ext=['tsv','csv']
@@ -75,6 +75,32 @@ def main(rootdir, filtered_data_name='Filtered_Data'):
     failed_files=open(os.path.join(dir_filtered, "error_log.txt"), 'a+')
     print("---------------- " + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + " ----------------",
           file=failed_files)
+
+    # iterate through files
+    for f in os.listdir(rootdir):
+        file_ext=f.split('.')[-1]
+
+        if file_ext in accepted_file_ext:
+            # Read file
+            print("Reading file " + f)
+            if file_ext == 'tsv':
+                df = pd.read_csv(f, header=0, delimiter='\t')
+            else:
+                df = pd.read_csv(f, header=0, delimiter='\t')
+
+            # Filter columns & save new output
+            df_filtered = df.loc[:, df.columns.isin(headers)]
+            # If original tobii file is missing expected column, log it
+            if len(df_filtered.columns) < len(headers):
+                missing_col=[i for i in headers if i not in df_filtered.columns.tolist()]
+                print(f + " is missing columns" + str(missing_col),
+                    file=failed_files)
+            # Write output
+            file_name = os.path.relpath(f, rootdir)  # Extract file name by removing root_dir from full path
+            df_filtered.to_csv(path_or_buf=os.path.join(dir_filtered, file_name), index=False)
+        else:
+            # If not a .csv or .tsv, log in failed_files
+            print(f, file=files_files)
 
 
 
