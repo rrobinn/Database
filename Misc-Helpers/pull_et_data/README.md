@@ -1,9 +1,7 @@
 `pull_et_data.py`  
 
-Script pulls specific eye-tracking tasks, maintaining the folder structure:  
-# Individual
-## Visit
-### Task  
+Script pulls specific eye-tracking tasks, maintaining the folder structure (`Individual/Visit/Task/my_file.tsv`)  
+
 
 The script expects the following arguments:  
 - <b>--rootdir</b>: Directory where ET data are (e.g. `Box/Elab_ET_Data/BCP_BSLERP/AUDIT_PASSED/`)  
