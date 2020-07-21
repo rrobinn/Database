@@ -43,11 +43,18 @@ def main(rootdir, destination, tasks):
     # Create the destination directory for all ET files if it does not exist
     if not os.path.exists(destination):
         os.mkdir(destination)
+    # Create sub-directory with today's date
+    destination = os.path.join(destination, datetime.now().strftime('%Y-%m-%d'))
+    if os.path.exists(destination): # If sub-dir with today's date exists, append (1) to dir name
+        destination += '(1)'
+
+    os.mkdir(destination)
 
     # start log of files with issues
     file_log = open(os.path.join(destination, "log.txt"), 'a+')
     print("---------------- " + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + " ----------------",
           file=file_log)
+    print('Tasks queried: ' + tasks, file = file_log)
 
     tasks=tasks.split(',')
     # Go thru participant files in ROOTDIR & look for tasks
@@ -57,18 +64,21 @@ def main(rootdir, destination, tasks):
             # select the task directories to copy
             task_dirs = os.listdir(os.path.join(partic_dir,dirs)) # List task directories
             task_dirs[:] = [x for x in task_dirs if x in tasks] # Reduce TASK_DIRS to include TASKS that user queries
-            for t in task_dirs:
-                file_to_copy = os.path.join(partic_dir, dirs, t)
-                path = Path(file_to_copy) # Get the visit folder ID
-                visit_dir = os.path.basename(path.parent)
-                dest_dir = os.path.join(destination, p, visit_dir, t)
+            if not task_dirs: # If the list is empty
+                print(os.path.relpath(partic_dir, rootdir) + ",Does not have tasks in subdirectories", file=file_log)
+            else:
+                for t in task_dirs:
+                    file_to_copy = os.path.join(partic_dir, dirs, t)
+                    path = Path(file_to_copy) # Get the visit folder ID
+                    visit_dir = os.path.basename(path.parent)
+                    dest_dir = os.path.join(destination, p, visit_dir, t)
 
-                # Copy the task directory, if it does not exist
-                if not os.path.exists(dest_dir):
-                    shutil.copytree(src=file_to_copy, dst=dest_dir)
-                    print(os.path.relpath(file_to_copy, rootdir) + ",Copied",  file=file_log)
-                else:
-                    print(os.path.relpath(file_to_copy, rootdir) + ",Skipped",  file=file_log)
+                    # Copy the task directory, if it does not exist
+                    if not os.path.exists(dest_dir):
+                        shutil.copytree(src=file_to_copy, dst=dest_dir)
+                        print(os.path.relpath(file_to_copy, rootdir) + ",Copied",  file=file_log)
+                    else:
+                        print(os.path.relpath(file_to_copy, rootdir) + ",Skipped",  file=file_log)
 
 
 
