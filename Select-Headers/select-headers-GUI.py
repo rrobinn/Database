@@ -8,16 +8,40 @@ class App(Frame):
         self.grid()
         self.ichose = [] # Empty list to collect all of the options that were selected
 
-        self.l = Listbox(self, height=10, selectmode=MULTIPLE)
-        # Selectmode can be SINGLE, BROWSE, MULTIPLE or EXTENDED. Default BROWSE
+        self.l = Listbox(self, height=10, selectmode=MULTIPLE) # List where user can select multiple options
         self.l.grid(column=0, row=0, sticky=(N,W,E,S))
 
-        s = Scrollbar(self, orient=VERTICAL, command=self.l.yview)
+        s = Scrollbar(self, orient=VERTICAL, command=self.l.yview) # adding scrollbar
         s.grid(column=0, row=0, sticky=(N,S,E))
         self.l['yscrollcommand'] = s.set
 
+        # TODO: Add button for closing
+        button = Button(text = 'I''m done selecting!', command=master.quit)
+        button.grid(column=0, row=1)
+
+
         # Set up listbox
-        x = ["X", "Y", "Media", "ID", "a", "b", "c", "D"]
+        x = ["ExportDate","StudioVersionRec","StudioProjectName","StudioTestName","ParticipantName",
+                "RecordingName","RecordingDate","RecordingDuration","RecordingResolution",
+                "PresentationSequence","FixationFilter","MediaName","MediaPosX (ADCSpx)","MediaPosY (ADCSpx)",
+                "MediaWidth","MediaHeight","SegmentName","SegmentStart","SegmentEnd","SegmentDuration",
+                "SceneName","SceneSegmentStart","SceneSegmentEnd","SceneSegmentDuration","RecordingTimestamp",
+                "LocalTimeStamp","EyeTrackerTimestamp","MouseEventIndex","MouseEvent","MouseEventX (ADCSpx)",
+                "MouseEventY (ADCSpx)","MouseEventX (MCSpx)","MouseEventY (MCSpx)","KeyPressEventIndex",
+                "KeyPressEvent","StudioEventIndex","StudioEvent","StudioEventData","ExternalEventIndex",
+                "ExternalEvent","ExternalEventValue","EventMarkerValue","FixationIndex","SaccadeIndex",
+                "GazeEventType","GazeEventDuration","FixationPointX (MCSpx)","FixationPointY (MCSpx)",
+                "SaccadicAmplitude","AbsoluteSaccadicDirection","RelativeSaccadicDirection",
+                "GazePointIndex","GazePointLeftX (ADCSpx)","GazePointLeftY (ADCSpx)",
+                "GazePointRightX (ADCSpx)","GazePointRightY (ADCSpx)","GazePointX (ADCSpx)",
+                "GazePointY (ADCSpx)","GazePointX (MCSpx)","GazePointY (MCSpx)","GazePointLeftX (ADCSmm)",
+                "GazePointLeftY (ADCSmm)","GazePointRightX (ADCSmm)","GazePointRightY (ADCSmm)",
+                "StrictAverageGazePointX (ADCSmm)","StrictAverageGazePointY (ADCSmm)",
+                "EyePosLeftX (ADCSmm)","EyePosLeftY (ADCSmm)","EyePosLeftZ (ADCSmm)",
+                "EyePosRightX (ADCSmm)","EyePosRightY (ADCSmm)","EyePosRightZ (ADCSmm)","CamLeftX",
+                "CamLeftY","CamRightX","CamRightY","DistanceLeft","DistanceRight","PupilLeft","PupilRight",
+                "ValidityLeft","ValidityRight","IRMarkerCount","IRMarkerID","PupilGlassesRight"]
+
         for each_item in range(len(x)):
             self.l.insert(END, x[each_item])
             #self.l.itemconfig(each_item, bg="lime")
@@ -41,17 +65,17 @@ class App(Frame):
         for i in range(len(items)):
             self.ichose.append(self.l.get(items[i]))
 
-
         return self.ichose
 
-""""
-    def update_list(self):
-        self.selected_list.delete(0.0, END)
-        self.selected_list.insert(0.0, self.ichose) """
+    #def quit(self):
+    #    self.destroy()
+
 
 root = Tk()
-root.title('test')
+root.title('Tobii headers')
 app=App(root)
 root.mainloop()
 
 print(app.ichose)
+## TODO
+# write code that allows user select path from finder
