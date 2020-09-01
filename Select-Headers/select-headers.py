@@ -89,9 +89,9 @@ def main(rootdir, headers, filtered_data_name='Filtered_Data'):
         if file_ext in accepted_file_ext: # If it is a .tsv or .csv, read the file
             print("Reading file " + f)
             if file_ext == 'tsv':
-                df = pd.read_csv(f, header=0, delimiter='\t',  low_memory=False)
+                df = pd.read_csv(os.path.join(rootdir,f), header=0, delimiter='\t',  low_memory=False)
             else:
-                df = pd.read_csv(f, header=0, delimiter=',', low_memory=False)
+                df = pd.read_csv(os.path.join(rootdir,f), header=0, delimiter=',', low_memory=False)
             # Filter columns & save new output
             df_filtered = df.loc[:, df.columns.isin(headers)]
             # If original tobii file is missing expected column, log it
@@ -100,8 +100,8 @@ def main(rootdir, headers, filtered_data_name='Filtered_Data'):
                 print(f + " is missing columns" + str(missing_col),
                     file=failed_files)
             # Write output
-            file_name = os.path.relpath(f, rootdir)  # Extract file name by removing root_dir from full path
-            df_filtered.to_csv(path_or_buf=os.path.join(dir_filtered, file_name), index=False)
+            #file_name = os.path.relpath(f, rootdir)  # Extract file name by removing root_dir from full path
+            df_filtered.to_csv(path_or_buf=os.path.join(dir_filtered, f), index=False)
         else: # If not a .csv or .tsv, skip
             print(f + " is not a .csv or .tsv. Skipping!")
             continue
