@@ -19,5 +19,5 @@ def select_et_dir():
 
     return dirname
 
-x=select_et_dir()
-print("The path you selected is" + x)
+
+
