@@ -1,0 +1,6 @@
+---------------- 2020-09-01 15:33:18 ----------------
+---------------- 2020-09-01 15:38:44 ----------------
+JE000094_03_02_inverted_A.tsv is missing columns['DistanceRight', 'DistanceLeft']
+---------------- 2020-09-01 15:41:05 ----------------
+JE000094_03_02_inverted_B.tsv is missing columns['ExportDate', 'DistanceRight', 'DistanceLeft']
+JE000094_03_02_EUAIMS.tsv is missing columns['ExportDate', 'DistanceRight', 'DistanceLeft']
