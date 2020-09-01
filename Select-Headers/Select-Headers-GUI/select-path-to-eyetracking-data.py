@@ -7,8 +7,7 @@ Script under development by Robin Sifre <robinsifre@gmail.com>.
 from tkinter import Tk
 import tkinter.filedialog
 import sys
-sys.coinit_flags = 2
-
+#sys.coinit_flags = 2
 
 def select_et_dir():
     # Make sure the TK() window doesn't appear, and doesn't keep the askdirectory up
@@ -19,3 +18,6 @@ def select_et_dir():
     dirname = tkinter.filedialog.askdirectory()
 
     return dirname
+
+x=select_et_dir()
+print("The path you selected is" + x)
