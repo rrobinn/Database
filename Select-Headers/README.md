@@ -15,7 +15,24 @@ e.g. `python3 select-headers.py --rootdir /Users/sifre002/select-headers/`
 ## Option 2: Enter headers into command line
 1. Open terminal. Navigate to directory where `select-headers.py` is located.
 2. Type `python3 select-headers.py --rootdir <path/to/your/files> --headers <your,comma,separated,headers>`  
-e.g. `python3 select-headers.py --rootdir /Users/sifre002/select-headers/ --headers ExportDate,DistanceRight,DistanceLeft`
+e.g. `python3 select-headers.py --rootdir /Users/sifre002/select-headers/ --headers ExportDate,DistanceRight,DistanceLeft`  
+
+## Option 3: Use the point-and-click GUI  
+<img src="https://github.com/rrobinn/Database/blob/master/img/Menu.png" align="right"
+     alt="Screengrab of select-headers menu" width="144" height="240">  
+     
+1. Open terminal. Navigate to directory where `select-headers.py` is located.  
+2. Type `python3 Select_Headers_GUI.py`.  
+3. A window will pop up with a list of tobii headers. Click to select/deselect the headers you want exported.  
+
+
+     
+4. Then a Finder window will pop up. Navigate to the directory where your .tsv files, and select that directory.  
+
+  
+    
+  
+
 # Headers
 For a complete list of headers you can export, see [Tobii Studio User Manual](https://www.tobiipro.com/siteassets/tobii-pro/user-manuals/tobii-pro-studio-user-manual.pdf)
 
