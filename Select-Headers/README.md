@@ -1,7 +1,8 @@
 Robin Sifre, robinsifre@gmail.com.  
 
 # About  
-Tobii's raw data file output contains up to 85 fields. This script creates filtered versions of those data files based on user input.  
+Tobii's raw eye-tracking data output file contains up to 85 fields. Many users prefer a "paired-down" version that only includes the fields that they need.  
+This script creates filtered versions of those data files based on user input.  
 
 # To execute  
 ## Option 1: Specify headers in .csv
