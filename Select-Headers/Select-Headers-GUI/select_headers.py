@@ -54,6 +54,52 @@ def select_headers(mydir):
         df=df[header_check[0]]
     return df[0]
 
+def is_BIDS_struct(dirname):
+    # TODO: More explicit checks of BIDS formating
+    # Function returns TRUE if data are organized using BIDS structure (Person/Visit/Task)
+    is_subdir = [os.path.isdir(os.path.join(dirname, f)) for f in os.listdir(dirname)]
+
+    # If the only sub-directory is "filtered_data", then not in BIDS format
+    if sum(is_subdir) == 1 and 'Filtered_Data' in os.listdir(dirname):
+        return False
+    # Otherwise, if there are any subdirs, potentially BIDS
+    return(sum(is_subdir)  > 0)
+
+def getListOfFiles(dirname):
+    #For a given path, recursively get the list of files in the directory truee
+    list_of_files = os.listdir(dirname)
+    all_files = list()
+    # Iterate over entries
+    for x in list_of_files:
+        fullpath = os.path.join(dirname, x)
+        # If x is a directory, get list of files
+        if os.path.isdir(fullpath):
+            all_files += getListOfFiles(fullpath)
+        else: # otherwise, append the file to all_files
+            all_files.append(fullpath)
+
+    return all_files
+
+def filter_headers(full_path_to_file, failed_log, headers):
+    print("Reading file " + os.path.basename(full_path_to_file))
+    if os.path.splitext(full_path_to_file)[1] == '.tsv':
+        df = pd.read_csv(full_path_to_file, header=0, delimiter='\t', low_memory=False)
+    else:
+        df = pd.read_csv(full_path_to_file, header=0, delimiter=',', low_memory=False)
+    # Filter columns & save new output
+    df_filtered = df.loc[:, df.columns.isin(headers)]
+
+    # # # # # # # # # # # # #
+    # Error checking
+    # # # # # # # # # # # # #
+    # If original tobii file is missing expected column, log it
+    if len(df_filtered.columns) < len(headers):
+        missing_col = [i for i in headers if i not in df_filtered.columns.tolist()]
+        print(full_path_to_file + " is missing columns" + str(missing_col),
+              file=failed_log)
+    return(df_filtered)
+
+
 
 def main(rootdir, headers, filtered_data_name='Filtered_Data'):
     # Look at all files in rootdir.
@@ -64,11 +110,12 @@ def main(rootdir, headers, filtered_data_name='Filtered_Data'):
         headers = select_headers(rootdir)
         headers = headers.tolist()
     else:
-        # Do something else
         headers=headers.split(',')
 
     # Check if files exist to filter
-    file_ext_list=[x.split('.')[-1] for x in os.listdir(rootdir) if '.' in x]
+    all_files = getListOfFiles(rootdir)
+    file_ext_list=[x.split('.')[-1] for x in all_files if '.' in x]
+    # file_ext_list=[x.split('.')[-1] for x in os.listdir(rootdir) if '.' in x]
     accepted_file_ext=['tsv','csv']
     if not any(item in accepted_file_ext for item in file_ext_list):
         return Exception("No .tsv or .csv files found in {}".format(rootdir))
@@ -83,28 +130,54 @@ def main(rootdir, headers, filtered_data_name='Filtered_Data'):
           file=failed_files)
 
     # iterate through files
-    for f in os.listdir(rootdir):
-        if f=='headers.csv': continue
-        file_ext=f.split('.')[-1]
-        if file_ext in accepted_file_ext: # If it is a .tsv or .csv, read the file
-            print("Reading file " + f)
-            if file_ext == 'tsv':
-                df = pd.read_csv(os.path.join(rootdir,f), header=0, delimiter='\t',  low_memory=False)
-            else:
-                df = pd.read_csv(os.path.join(rootdir,f), header=0, delimiter=',', low_memory=False)
-            # Filter columns & save new output
-            df_filtered = df.loc[:, df.columns.isin(headers)]
-            # If original tobii file is missing expected column, log it
-            if len(df_filtered.columns) < len(headers):
-                missing_col=[i for i in headers if i not in df_filtered.columns.tolist()]
-                print(f + " is missing columns" + str(missing_col),
-                    file=failed_files)
-            # Write output
-            #file_name = os.path.relpath(f, rootdir)  # Extract file name by removing root_dir from full path
-            df_filtered.to_csv(path_or_buf=os.path.join(dir_filtered, f), index=False)
-        else: # If not a .csv or .tsv, skip
-            print(f + " is not a .csv or .tsv. Skipping!")
-            continue
+    if is_BIDS_struct(rootdir): # preserve file structure
+        for root, dirs, files in os.walk(rootdir):
+            #
+            dirs[:] = [d for d in dirs if d!= 'Filtered_Data']
+            if len(files) > 0:
+                for f in files:
+                    if f.split('.')[-1] in ['tsv', 'csv']:
+                        # Filter headers
+                        full_path_to_file = os.path.join(root, f)
+                        df_filtered = filter_headers(full_path_to_file, headers)
+                        # Save in same file structure
+                        temp_relative_path = os.path.relpath(root, start = rootdir)
+                        # Create dirs if needed
+                        if not os.path.exists(os.path.join(dir_filtered, temp_relative_path)):
+                            os.makedirs(os.path.join(dir_filtered, temp_relative_path))
+                        df_filtered.to_csv(path_or_buf=os.path.join(dir_filtered, temp_relative_path, f), index=False)
+    else:
+        for f in os.listdir(rootdir):
+            if f=='headers.csv': continue
+            file_ext=f.split('.')[-1]
+
+            list_of_files = os.listdir(rootdir)
+            # Iterate over entries
+
+            for x in list_of_files:
+                fullpath = os.path.join(dirname, x)
+                # If x is a directory, get list of files
+                if os.path.isdir(fullpath):
+                    all_files += getListOfFiles(fullpath)
+                else:  # otherwise, append the file to all_files
+                    all_files.append(fullpath)
+
+            if file_ext in accepted_file_ext: # If it is a .tsv or .csv, read the file
+                #print("Reading file " + f)
+                #if file_ext == 'tsv':
+                #    df = pd.read_csv(os.path.join(rootdir,f), header=0, delimiter='\t',  low_memory=False)
+                #else:
+                #    df = pd.read_csv(os.path.join(rootdir,f), header=0, delimiter=',', low_memory=False)
+                # Filter columns & save new output
+
+                df_filtered = filter_headers(os.path.join(rootdir,f), headers)
+
+                # Write output
+                #file_name = os.path.relpath(f, rootdir)  # Extract file name by removing root_dir from full path
+                df_filtered.to_csv(path_or_buf=os.path.join(dir_filtered, f), index=False)
+            else: # If not a .csv or .tsv, skip
+                print(f + " is not a .csv or .tsv. Skipping!")
+                continue
 
 
 
