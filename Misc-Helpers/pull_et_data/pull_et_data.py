@@ -24,36 +24,31 @@ Calibration_Verification,EU-AIMS_counter_1 '''
             all_files.append( os.path.relpath(full_path, dirname) )
     return all_files
 
-def getListOfSubDirs(dirname):
-    # create list of subdirs
-    file_list = os.listdir(dirname)
-    all_subdirs = list()
-    for entry in file_list:
-        full_path = os.path.join(dirname, entry)
-        if os.path.isdir(full_path): # If full_path is a directory
-            all_subdirs.append(os.path.relpath(full_path, dirname)) # append to list of directories
-            all_subdirs=all_subdirs + getListOfSubDirs(full_path) # Recursively check if there is a sub-dir
-    return all_subdirs '''
+'''
 
-def main(rootdir, destination, tasks, keepBIDS=True):
+def main(rootdir, destination, tasks, keepBIDS):
     # Copy specific eye-tracking tasks from rootdir to destination
     # Create the destination directory for all ET files if it does not exist
+
+
+    # Create sub-directory with label if it is in BIDS format
+    if keepBIDS is True:
+        destination += "BIDS"
+    else:
+        destination += 'Session'
+
     if not os.path.exists(destination):
         os.mkdir(destination)
-    # Create sub-directory with today's date
-    destination = os.path.join(destination, datetime.now().strftime('%Y-%m-%d'))
-    if os.path.exists(destination): # If sub-dir with today's date exists, append (1) to dir name
-        destination += '(1)'
-
-    os.mkdir(destination)
 
     # start log of files with issues
-    file_log = open(os.path.join(destination, "log.txt"), 'a+')
+    log_name = "log" + datetime.now().strftime('%Y-%m-%d-%H%M%S') + ".txt"
+    file_log = open(os.path.join(destination, log_name), 'a+')
     print("---------------- " + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + " ----------------",
           file=file_log)
     print('Tasks queried: ' + tasks, file = file_log)
 
-    tasks=tasks.split(',')
+    tasks = tasks.split(',')
+    tasks = [t.replace(' ', '') for t in tasks] # Remove white space
     # Go thru participant files in ROOTDIR & look for tasks
     for p in os.listdir(rootdir): # For each participant directory:
         partic_dir=os.path.join(rootdir, p)
@@ -86,7 +81,8 @@ def main(rootdir, destination, tasks, keepBIDS=True):
                         files_to_copy = os.listdir(dir_to_copy)
                         for f in files_to_copy:
                             task_file = dir_to_copy+"/"+f
-                            if not os.path.exists(task_file):
+                            # Copy .tsv if not already there
+                            if not os.path.exists(os.path.join(dest_dir, f)):
                                 shutil.copy(src=dir_to_copy+"/"+f, dst=dest_dir)
                                 print(os.path.relpath(task_file, rootdir) + ",Copied", file=file_log)
                             else:
@@ -101,8 +97,8 @@ if __name__ == '__main__':
                     help="Where data should be copied to")
     ap.add_argument("--tasks", required=False, type=str,
                     help="e.g. Calibration_Verification, EU-AIMS_counter_1, EU-AIMS_counter_2")
-    ap.add_argument("--keepBIDS", required=False, type=bool,
-                    help="Keep BIDS format? (Default=True. If False, then each visit gets its own folder")
+    ap.add_argument("-keepBIDS", required=False, type=bool, default=None,
+                    help="Keep BIDS format?")
 
     args=ap.parse_args()
-    main(args.rootdir, args.destination, args.tasks)
+    main(args.rootdir, args.destination, args.tasks, args.keepBIDS)
